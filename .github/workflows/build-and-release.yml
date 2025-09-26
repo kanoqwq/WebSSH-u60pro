@@ -1,0 +1,104 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    name: Build and Release for Multiple OS & Arch
+    permissions:
+      contents: write
+    
+    strategy:
+      matrix:
+        include:
+          # Windows targets (64-bit only)
+          - os: windows
+            goos: windows
+            arch: amd64
+            suffix: .exe
+          - os: windows
+            goos: windows
+            arch: arm64
+            suffix: .exe
+          
+          # Linux targets (64-bit architectures)
+          - os: linux
+            goos: linux
+            arch: amd64
+            suffix: ''
+          - os: linux
+            goos: linux
+            arch: arm64
+            suffix: ''
+          
+          # macOS targets (64-bit only)
+          - os: macos
+            goos: darwin
+            arch: amd64
+            suffix: ''
+          - os: macos
+            goos: darwin
+            arch: arm64
+            suffix: ''
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.5'
+
+      - name: Prepare workspace
+        run: |
+          echo "📂 Workspace structure:"
+          ls -la
+          
+          echo "📂 gossh directory content:"
+          ls -la gossh
+          
+          # 确保目录存在
+          if [ ! -d "gossh" ]; then
+            echo "❌ Error: gossh directory not found!"
+            exit 1
+          fi
+          
+          # 进入gossh目录准备构建
+          cd gossh
+          
+          # 更新依赖
+          go mod tidy
+          go mod download
+
+      - name: Build for ${{ matrix.os }} (${{ matrix.arch }})
+        run: |
+          cd gossh
+          
+          # 静态编译
+          CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.arch }} \
+            go build -trimpath -ldflags="-s -w" -o GoWebSSH${{ matrix.suffix }}
+          
+          # 验证构建结果
+          if [ -f "GoWebSSH${{ matrix.suffix }}" ]; then
+            echo "✅ Build successful! Output file: GoWebSSH${{ matrix.suffix }}"
+          else
+            echo "❌ Build failed! No output file found in: $(pwd)"
+            ls -la
+            exit 1
+          fi
+          
+          # 创建压缩包（在仓库根目录）
+          zip -j ../GoWebSSH-${{ matrix.os }}-${{ matrix.arch }}.zip GoWebSSH${{ matrix.suffix }}
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: |
+            GoWebSSH-*.zip
