@@ -72,6 +72,18 @@
             自动
           </label>
         </div>
+        <div class="auto-refresh-controls">
+          <button
+            class="btn btn-primary"
+            @click="oneClickDebug"
+            >一键ADB</button
+          >
+          <button
+            class="btn btn-primary"
+            @click="smsForwardHandler"
+            >短信转发</button
+          >
+        </div>
       </div>
     </div>
 
@@ -91,63 +103,6 @@
 
     <!-- 数据展示 -->
     <div v-else-if="dataReady" class="content">
-      <!-- 操作卡片 -->
-      <div class="card device-actions-card">
-        <div class="card-header">
-          <h3 class="hd">
-            <img style="width: 24px" :src="ActionsIcon" alt="" />设备操作
-          </h3>
-        </div>
-        <div class="card-content">
-          <div class="device-stats">
-            <div class="device-item">
-              <el-button
-                type="primary"
-                style="color: white"
-                color="#409eff5d"
-                @click="oneClickDebug"
-                >一键ADB</el-button
-              >
-            </div>
-            <div class="device-item">
-              <el-button
-                type="primary"
-                style="color: white"
-                color="#409eff5d"
-                @click="lockBandHandler"
-                >锁频段</el-button
-              >
-            </div>
-            <div class="device-item">
-              <el-button
-                type="primary"
-                style="color: white"
-                color="#409eff5d"
-                @click="lockFreqHandler"
-                >锁基站</el-button
-              >
-            </div>
-            <div class="device-item">
-              <el-button
-                type="primary"
-                style="color: white"
-                color="#409eff5d"
-                @click="smsForwardHandler"
-                >短信转发</el-button
-              >
-            </div>
-            <div class="device-item">
-              <el-button
-                type="primary"
-                style="color: white"
-                color="#409eff5d"
-                @click="pluginStoreHandler"
-                >插件管理</el-button
-              >
-            </div>
-          </div>
-        </div>
-      </div>
       <!-- 设备信息卡片 -->
       <div class="card device-info-card">
         <div class="card-header">
@@ -1243,7 +1198,9 @@ async function fetchAllData() {
 }
 
 function refresh() {
-  fetchAllData();
+  fetchAllData().then((res) => {
+    ElMessage.success('数据已刷新');
+  });
 }
 
 function toggleAutoRefresh() {
@@ -1286,41 +1243,11 @@ function oneClickDebug() {
     });
 }
 
-// 锁频段
-function lockBandHandler() {
-  ElNotification({
-    title: '功能未实现',
-    message: '锁频段功能尚未实现，敬请期待！',
-    type: 'warning',
-    duration: 5000,
-  });
-}
-
-// 锁基站
-function lockFreqHandler() {
-  ElNotification({
-    title: '功能未实现',
-    message: '锁基站功能尚未实现，敬请期待！',
-    type: 'warning',
-    duration: 5000,
-  });
-}
-
 // 短信转发
 function smsForwardHandler() {
   ElNotification({
     title: '功能未实现',
     message: '短信转发功能尚未实现，敬请期待！',
-    type: 'warning',
-    duration: 5000,
-  });
-}
-
-// 插件商店
-function pluginStoreHandler() {
-  ElNotification({
-    title: '功能未实现',
-    message: '插件商店功能尚未实现，敬请期待！',
     type: 'warning',
     duration: 5000,
   });
@@ -1355,7 +1282,7 @@ onUnmounted(() => {
   align-items: center;
   backdrop-filter: blur(20px);
   border-radius: 16px;
-  padding: 20px 24px;
+  padding: 12px 16px;
   margin-bottom: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -1427,7 +1354,7 @@ onUnmounted(() => {
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -1439,8 +1366,8 @@ onUnmounted(() => {
 }
 
 .checkmark {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.6);
   border-radius: 4px;
   position: relative;
@@ -1464,7 +1391,7 @@ onUnmounted(() => {
 }
 
 .auto-refresh-controls select {
-  padding: 8px 12px;
+  padding: 4px 6px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.15);
@@ -1488,7 +1415,7 @@ onUnmounted(() => {
 
 /* 按钮样式 */
 .btn {
-  padding: 10px 20px;
+  padding: 5px 10px;
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -1506,9 +1433,9 @@ onUnmounted(() => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4299e1, #3182ce);
+  background: #409eff5d;
   color: white;
-  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.1);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -1630,7 +1557,7 @@ onUnmounted(() => {
 
 .card-header {
   background: rgba(255, 255, 255, 0.1);
-  padding: 20px 24px;
+  padding: 12px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   justify-content: space-between;
@@ -1645,7 +1572,7 @@ onUnmounted(() => {
 }
 
 .card-content {
-  padding: 24px;
+  padding: 16px;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;

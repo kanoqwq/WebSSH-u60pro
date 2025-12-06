@@ -58,8 +58,8 @@ axios.interceptors.request.use(
                 basePath = "";
             }
         }
-        req.url = `${basePath}${req.url}`;
-        // req.url = `http://127.0.0.1:3000${req.url}`;
+        // req.url = `${basePath}${req.url}`;
+        req.url = `http://127.0.0.1:3000${req.url}`;
         // 在发送请求之前加token
         req.headers.Time = String(new Date().getTime());
         req.headers.Authorization = localStorage.getItem("token");
