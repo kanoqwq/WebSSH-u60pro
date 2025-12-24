@@ -533,16 +533,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, defineAsyncComponent } from "vue";
-import { useRouter } from "vue-router";
-import { ElMessage, ElNotification, ElPopover } from "element-plus";
-import { FolderOpened, SwitchButton,Files,Lock, Bottom, Upload, Menu, CirclePlus, Coin, Sort, Edit, Setting, User, CircleClose, Star } from "@element-plus/icons-vue";
-import axios, { type AxiosProgressEvent } from "axios";
 import { useGlobalStore } from "@/stores/store";
-import { Terminal } from "@xterm/xterm";
+import { Bottom, CirclePlus, Coin, Edit, Files, FolderOpened, Lock, Menu, Sort, Star, SwitchButton, Upload } from "@element-plus/icons-vue";
 import { AttachAddon } from "@xterm/addon-attach";
 import { FitAddon } from "@xterm/addon-fit";
+import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
+import axios, { type AxiosProgressEvent } from "axios";
+import { ElMessage, ElNotification, ElPopover } from "element-plus";
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
 import Empty from "./Empty.vue";
 const Manage = defineAsyncComponent(() => import('./Manage.vue'))
 
@@ -1695,11 +1695,44 @@ function disconnectAllSession() {
 /**
  * 退出登陆
  */
+// function logout() {
+//   disconnectAllSession();
+//   globalStore.logout();
+//   localStorage.setItem("auth", "no");
+//   router.push({ "name": "Login" });
+// }
+/**
+ * 退出登录（保留记住密码）
+ */
 function logout() {
+  // 1. 断开所有连接
   disconnectAllSession();
-  globalStore.logout();
+
+  // 2. 清空内存态
+  // globalStore.logout();
+
+  // 3. 清除登录凭证
+  localStorage.removeItem("token");
   localStorage.setItem("auth", "no");
-  router.push({ "name": "Login" });
+
+  // 4. 关闭自动登录（但不清记住密码）
+  disableAutoLogin();
+
+  // 5. 跳转登录页
+  router.replace({ name: "Login" });
+}
+
+function disableAutoLogin() {
+  const raw = localStorage.getItem("login_account");
+  if (!raw) return;
+  try {
+    const account = JSON.parse(raw);
+    account.autoLogin = false;
+    localStorage.setItem("login_account", JSON.stringify(account));
+  } catch {
+    // 如果解析失败，直接清掉
+    localStorage.removeItem("login_account");
+  }
 }
 
 /**

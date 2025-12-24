@@ -80,6 +80,11 @@
           >
           <button
             class="btn btn-primary"
+            @click="oneClickDebugClose"
+            >关闭ADB</button
+          >
+          <button
+            class="btn btn-primary"
             @click="smsForwardHandler"
             >短信转发</button
           >
@@ -103,6 +108,272 @@
 
     <!-- 数据展示 -->
     <div v-else-if="dataReady" class="content">
+      
+      <!-- NR 5G 载波 -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="hd">
+            <img style="width: 24px" :src="NetworkIcon" alt="" />5G 载波信息
+          </h3>
+          <span v-if="networkType != '5G'" class="tag warning">未激活</span>
+          <span v-else class="tag success">
+            {{ networkType }}{{ is5GA ? 'A' : '' }}
+            
+            ({{ d.nr5g_action_band?.toUpperCase() ?? '-' }}{{
+                formatNrca(d.nrca,'',0,3) != '-' ? ', N' + formatNrca(d.nrca,'',0,3) : '' }}{{
+                formatNrca(d.nrca,'',1,3) != '-' ? ', N' + formatNrca(d.nrca,'',1,3) : '' }})
+            </span>
+        </div>
+        <div class="card-content">
+          <div class="signal-grid">
+            <table class="mytable" width="100%">
+              <tr>
+                <td width="13%"></td>
+                <td width="9%">PCI</td>
+                <td width="11%">5G<br/>频段</td>
+                <td width="16%">5G<br/>频点</td>
+                <td width="11%">DL<br/>带宽</td>
+                <td width="10%">RSRP</td>
+                <td width="10%">RSRQ</td>
+                <td width="10%">SINR</td>
+                <td width="10%">RSSI</td>
+              </tr>
+              <tr>
+                <td>PCC</td>
+                <td>{{ d.nr5g_pci ?? '-' }}</td>
+                <td>{{ d.nr5g_action_band?.toUpperCase() ?? '-' }}</td>
+                <td>{{ d.nr5g_action_channel ?? '-' }}</td>
+                <td>{{ d.nr5g_bandwidth ?? '-' }}</td>
+                <td class="dbmstyle">{{ d.nr5g_rsrp }}</td>
+                <td>{{ d.nr5g_rsrq }}</td>
+                <td>{{ d.nr5g_snr }}</td>
+                <td class="dbmstyle">{{ d.nr5g_rssi }}</td>
+              </tr>
+              <tr>
+                <td>SCC0</td>
+                <td>{{ formatNrca(d.nrca,'',0,1) }}</td>
+                <td>{{ formatNrca(d.nrca,'N',0,3) }}</td>
+                <td>{{ formatNrca(d.nrca,'',0,4) }}</td>
+                <td>{{ formatNrca(d.nrca,'',0,5) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.nrca,'',0,7) }}</td>
+                <td>{{ formatNrca(d.nrca,'',0,8) }}</td>
+                <td>{{ formatNrca(d.nrca,'',0,9) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.nrca,'',0,10) }}</td>
+              </tr>
+              <tr>
+                <td>SCC1</td>
+                <td>{{ formatNrca(d.nrca,'',1,1) }}</td>
+                <td>{{ formatNrca(d.nrca,'N',1,3) }}</td>
+                <td>{{ formatNrca(d.nrca,'',1,4) }}</td>
+                <td>{{ formatNrca(d.nrca,'',1,5) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.nrca,'',1,7) }}</td>
+                <td>{{ formatNrca(d.nrca,'',1,8) }}</td>
+                <td>{{ formatNrca(d.nrca,'',1,9) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.nrca,'',1,10) }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NR 4G 载波 -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="hd">
+            <img style="width: 24px" :src="NetworkIcon" alt="" />4G 载波信息
+          </h3>
+          <span v-if="networkType != '4G'" class="tag warning">未激活</span>
+          <span v-else class="tag success">
+            {{ networkType }}{{ is5GA ? '+' : '' }}
+            ({{ formatNrca(d.lteca,'B',0,1) }}{{
+                formatNrca(d.lteca,'',1,1) != '-' ? ', B' + formatNrca(d.lteca,'',1,1) : '' }}{{
+                formatNrca(d.lteca,'',2,1) != '-' ? ', B' + formatNrca(d.lteca,'',2,1) : '' }}{{
+                formatNrca(d.lteca,'',3,1) != '-' ? ', B' + formatNrca(d.lteca,'',3,1) : '' }})
+          </span>
+        </div>
+        <div class="card-content">
+          <div class="signal-grid">
+            <table class="mytable" width="100%">
+              <tr>
+                <td width="13%"></td>
+                <td width="9%">PCI</td>
+                <td width="11%">4G<br/>频段</td>
+                <td width="16%">4G<br/>信道</td>
+                <td width="11%">DL<br/>带宽</td>
+                <td width="10%">RSRP</td>
+                <td width="10%">RSRQ</td>
+                <td width="10%">SINR</td>
+                <td width="10%">RSSI</td>
+              </tr>
+              <tr>
+                <td>PCC</td>
+                <td>{{ d.lte_pci ?? '-' }}</td>
+                <td>{{ formatNrca(d.lteca,'B',0,1) }}</td>
+                <td>{{ d.wan_active_channel ?? '-' }}</td>
+                <td>{{ formatNrca(d.lteca,'',0,4) }}</td>
+                <td class="dbmstyle">{{ d.lte_rsrp }}</td>
+                <td>{{ d.lte_rsrq }}</td>
+                <td>{{ d.lte_snr }}</td>
+                <td class="dbmstyle">{{ d.lte_rssi }}</td>
+              </tr>
+              <tr>
+                <td>SCC0</td>
+                <td>{{ formatNrca(d.lteca,'',1,0) }}</td>
+                <td>{{ formatNrca(d.lteca,'B',1,1) }}</td>
+                <td>{{ formatNrca(d.lteca,'',1,3) }}</td>
+                <td>{{ formatNrca(d.lteca,'',1,4) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.ltecasig,'',0,0) }}</td>
+                <td>{{ formatNrca(d.ltecasig,'',0,1) }}</td>
+                <td>{{ formatNrca(d.ltecasig,'',0,2) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.ltecasig,'',0,3) }}</td>
+              </tr>
+              <tr>
+                <td>SCC1</td>
+                <td>{{ formatNrca(d.lteca,'',2,0) }}</td>
+                <td>{{ formatNrca(d.lteca,'B',2,1) }}</td>
+                <td>{{ formatNrca(d.lteca,'',2,3) }}</td>
+                <td>{{ formatNrca(d.lteca,'',2,4) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.ltecasig,'',1,0) }}</td>
+                <td>{{ formatNrca(d.ltecasig,'',1,1) }}</td>
+                <td>{{ formatNrca(d.ltecasig,'',1,2) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.ltecasig,'',1,3) }}</td>
+              </tr>
+              <tr>
+                <td>SCC2</td>
+                <td>{{ formatNrca(d.lteca,'',3,0) }}</td>
+                <td>{{ formatNrca(d.lteca,'B',3,1) }}</td>
+                <td>{{ formatNrca(d.lteca,'',3,3) }}</td>
+                <td>{{ formatNrca(d.lteca,'',3,4) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.ltecasig,'',2,0) }}</td>
+                <td>{{ formatNrca(d.ltecasig,'',2,1) }}</td>
+                <td>{{ formatNrca(d.ltecasig,'',2,2) }}</td>
+                <td class="dbmstyle">{{ formatNrca(d.ltecasig,'',2,3) }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- NR 5G信号卡片 -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="hd">
+            <img style="width: 24px" :src="NetworkIcon" alt="" />NR 5G 信号
+          </h3>
+          <span v-if="networkType != '5G'" class="tag warning">未激活</span>
+          <span v-else class="tag success">已激活</span>
+        </div>
+        <div class="card-content">
+          <div class="signal-grid">
+            <div class="signal-item">
+              <span class="label">RSRP</span>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{ width: getRsrpPercent(d.nr5g_rsrp) + '%' }"></div>
+                <span class="progress-text">{{ formatDbm(d.nr5g_rsrp) }}</span>
+              </div>
+            </div>
+            <div class="signal-item">
+              <span class="label">RSRQ</span>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{ width: getRsrqPercent(d.nr5g_rsrq) + '%' }"></div>
+                <span class="progress-text">{{ formatDb(d.nr5g_rsrq) }}</span>
+              </div>
+            </div>
+            <div class="signal-item">
+              <span class="label">SINR</span>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{ width: getSnrPercent(d.nr5g_snr) + '%' }"></div>
+                <span class="progress-text">{{ formatSnr(d.nr5g_snr) }}</span>
+              </div>
+            </div>
+            <div class="signal-item">
+              <span class="label">RSSI</span>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{ width: getRssiPercent(d.nr5g_rssi) + '%' }"></div>
+                <span class="progress-text">{{ formatDbm(d.nr5g_rssi) }}</span>
+              </div>
+            </div>
+            <div class="signal-item">
+              <span class="label">PCI</span>
+              <span class="value">{{ d.nr5g_pci ?? '-' }}</span>
+            </div>
+            
+            <div class="signal-item" width="100%">
+              <span class="label">Cell ID</span>
+              <span class="value">{{ d.nr5g_cell_id ?? '-' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LTE信号卡片 -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="hd">
+            <img style="width: 24px" :src="NetworkIcon" alt="" />LTE 信号
+          </h3>
+          <span v-if="networkType != '4G'" class="tag warning">未激活</span>
+          <span v-else class="tag success">已激活</span>
+        </div>
+        <div class="card-content">
+          <div class="signal-grid">
+            
+            <div class="signal-item">
+              <span class="label">RSRP</span>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{ width: getRsrpPercent(d.lte_rsrp) + '%' }"></div>
+                <span class="progress-text">{{ formatDbm(d.lte_rsrp) }}</span>
+              </div>
+            </div>
+            <div class="signal-item">
+              <span class="label">RSRQ</span>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{ width: getRsrqPercent(d.lte_rsrq) + '%' }"></div>
+                <span class="progress-text">{{ formatDb(d.lte_rsrq) }}</span>
+              </div>
+            </div>
+            <div class="signal-item">
+              <span class="label">SINR</span>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{ width: getSnrPercent(d.lte_snr) + '%' }"></div>
+                <span class="progress-text">{{ formatSnr(d.lte_snr) }}</span>
+              </div>
+            </div>
+            <div class="signal-item">
+              <span class="label">RSSI</span>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{ width: getRssiPercent(d.lte_rssi) + '%' }"></div>
+                <span class="progress-text">{{ formatDbm(d.lte_rssi) }}</span>
+              </div>
+            </div>
+            <div class="signal-item">
+              <span class="label">PCI</span>
+              <span class="value">{{ d.lte_pci ?? '-' }}</span>
+            </div>
+            <div class="signal-item">
+              <span class="label">Cell ID</span>
+              <span class="value">{{ d.cell_id ?? '-' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <!-- 设备信息卡片 -->
       <div class="card device-info-card">
         <div class="card-header">
@@ -247,6 +518,7 @@
           </div>
         </div>
       </div>
+      
       <!-- 网络信息卡片 -->
       <div class="card">
         <div class="card-header">
@@ -299,124 +571,6 @@
         </div>
       </div>
 
-      <!-- NR 5G信号卡片 -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="hd">
-            <img style="width: 24px" :src="NetworkIcon" alt="" />NR 5G 信号
-          </h3>
-          <span v-if="networkType != '5G'" class="tag warning">未激活</span>
-          <span v-else class="tag success">已激活</span>
-        </div>
-        <div class="card-content">
-          <div class="signal-grid">
-            <div class="signal-item">
-              <span class="label">RSSI</span>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: getRssiPercent(d.nr5g_rssi) + '%' }"></div>
-                <span class="progress-text">{{ formatDbm(d.nr5g_rssi) }}</span>
-              </div>
-            </div>
-            <div class="signal-item">
-              <span class="label">RSRP</span>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: getRsrpPercent(d.nr5g_rsrp) + '%' }"></div>
-                <span class="progress-text">{{ formatDbm(d.nr5g_rsrp) }}</span>
-              </div>
-            </div>
-            <div class="signal-item">
-              <span class="label">RSRQ</span>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: getRsrqPercent(d.nr5g_rsrq) + '%' }"></div>
-                <span class="progress-text">{{ formatDb(d.nr5g_rsrq) }}</span>
-              </div>
-            </div>
-            <div class="signal-item">
-              <span class="label">SNR</span>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: getSnrPercent(d.nr5g_snr) + '%' }"></div>
-                <span class="progress-text">{{ formatSnr(d.nr5g_snr) }}</span>
-              </div>
-            </div>
-            <div class="signal-item">
-              <span class="label">PCI</span>
-              <span class="value">{{ d.nr5g_pci ?? '-' }}</span>
-            </div>
-            <div class="signal-item">
-              <span class="label">Cell ID</span>
-              <span class="value">{{ d.nr5g_cell_id ?? '-' }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LTE信号卡片 -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="hd">
-            <img style="width: 24px" :src="NetworkIcon" alt="" />LTE 信号
-          </h3>
-          <span v-if="networkType != '4G'" class="tag warning">未激活</span>
-          <span v-else class="tag success">已激活</span>
-        </div>
-        <div class="card-content">
-          <div class="signal-grid">
-            <div class="signal-item">
-              <span class="label">RSSI</span>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: getRssiPercent(d.lte_rssi) + '%' }"></div>
-                <span class="progress-text">{{ formatDbm(d.lte_rssi) }}</span>
-              </div>
-            </div>
-            <div class="signal-item">
-              <span class="label">RSRP</span>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: getRsrpPercent(d.lte_rsrp) + '%' }"></div>
-                <span class="progress-text">{{ formatDbm(d.lte_rsrp) }}</span>
-              </div>
-            </div>
-            <div class="signal-item">
-              <span class="label">RSRQ</span>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: getRsrqPercent(d.lte_rsrq) + '%' }"></div>
-                <span class="progress-text">{{ formatDb(d.lte_rsrq) }}</span>
-              </div>
-            </div>
-            <div class="signal-item">
-              <span class="label">SNR</span>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: getSnrPercent(d.lte_snr) + '%' }"></div>
-                <span class="progress-text">{{ formatSnr(d.lte_snr) }}</span>
-              </div>
-            </div>
-            <div class="signal-item">
-              <span class="label">PCI</span>
-              <span class="value">{{ d.lte_pci ?? '-' }}</span>
-            </div>
-            <div class="signal-item">
-              <span class="label">Cell ID</span>
-              <span class="value">{{ d.cell_id ?? '-' }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- 流量统计卡片 -->
       <div class="card">
         <div class="card-header">
@@ -439,7 +593,7 @@
               </div>
             </div>
             <div class="traffic-item">
-              <div class="traffic-label">上传用息</div>
+              <div class="traffic-label">上传用量</div>
               <div class="traffic-value" style="font-size: 12px">
                 <!-- {{ formatBytes(trafficData.real_tx_bytes) }} -->
                 <div>当日：{{ formatBytes(trafficData.day_tx_bytes) }}</div>
@@ -682,18 +836,17 @@
 </template>
 
 <script setup lang="ts">
-import InternetIcon from '@/assets/svgs/internet.svg';
-import ActionsIcon from '@/assets/svgs/actions.svg';
-import NetworkIcon from '@/assets/svgs/network.svg';
 import ChartIcon from '@/assets/svgs/chart.svg';
-import TagIcon from '@/assets/svgs/tag.svg';
-import LockIcon from '@/assets/svgs/lock.svg';
-import InterfaceIcon from '@/assets/svgs/interface.svg';
 import DashboardIcon from '@/assets/svgs/dashboard.svg';
+import InterfaceIcon from '@/assets/svgs/interface.svg';
+import InternetIcon from '@/assets/svgs/internet.svg';
+import LockIcon from '@/assets/svgs/lock.svg';
+import NetworkIcon from '@/assets/svgs/network.svg';
+import TagIcon from '@/assets/svgs/tag.svg';
 
-import { ElMessage, ElNotification } from 'element-plus';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
+import { ElMessage, ElNotification } from 'element-plus';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 interface UbusResponse<T = any> {
   code: number;
@@ -991,6 +1144,14 @@ const openAdbRequest = {
   },
 };
 
+const closeAdbRequest = {
+  service: 'zwrt_bsp.usb',
+  method: 'set',
+  params: {
+    mode: 'user',
+  },
+};
+
 // 计算属性
 const dataReady = computed(() => !!data.value);
 const d = computed(() => data.value || {});
@@ -1136,6 +1297,23 @@ function getSnrPercent(snr: number): number {
   return Math.round(percent);
 }
 
+// 获取载波信息
+function formatNrca(nrca: string, pre: string, type: number, index: number): string {
+  if (!nrca) return '-';
+  const carriers = nrca.split(';').filter(item => item.trim() !== '');
+  const carrier = carriers[type];
+  if (!carrier) return '-';
+  const fields = carrier.split(',');
+  // index 越界
+  if (index < 0 || index >= fields.length) return '-';
+  const value = fields[index];
+  // 参数为空
+  if (!value || value.trim() === '') return '-';
+  const num = Number(value);
+  if (Number.isNaN(num)) return '-';
+  return pre + String(num);
+}
+
 // API 调用函数
 async function callUbus<T>(request: any): Promise<T> {
   const response = await axios.post<UbusResponse<T>>('/api/ubus', request);
@@ -1242,6 +1420,17 @@ function oneClickDebug() {
       ElMessage.error('请求失败：' + (err?.message || '未知错误'));
     });
 }
+
+function oneClickDebugClose() {
+  callUbus<any>(closeAdbRequest)
+    .then(() => {
+      ElMessage.success('已关闭ADB调试模式');
+    })
+    .catch((err) => {
+      ElMessage.error('请求失败：' + (err?.message || '未知错误'));
+    });
+}
+
 
 // 短信转发
 function smsForwardHandler() {
@@ -1590,7 +1779,7 @@ onUnmounted(() => {
 
 .device-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 20px;
 }
 
@@ -1730,7 +1919,7 @@ onUnmounted(() => {
 /* 信息网格 */
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 16px;
 }
 
@@ -1789,7 +1978,7 @@ onUnmounted(() => {
 /* 信号进度条 */
 .signal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 16px;
 }
 
@@ -2133,4 +2322,9 @@ onUnmounted(() => {
     border-bottom-color: rgba(255, 255, 255, 0.1);
   }
 }
+
+.mytable{caption-side: bottom;}
+.mytable{border-collapse: collapse;}
+.mytable,tr,td{border: 1px solid rgb(59, 104, 141);font-size: 14px;text-align: center;}
+.dbmstyle{color: rgb(104, 211, 145)}
 </style>

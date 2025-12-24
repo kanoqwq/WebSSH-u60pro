@@ -1,12 +1,12 @@
-import { createApp } from "vue";
 import { createPinia } from "pinia";
+import { createApp } from "vue";
 
-import App from "./App.vue";
-import router from "./router";
+import axios from "axios";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
-import axios from "axios";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
+import App from "./App.vue";
+import router from "./router";
 
 import { useGlobalStore } from "./stores/store";
 
@@ -59,7 +59,8 @@ axios.interceptors.request.use(
             }
         }
         // req.url = `${basePath}${req.url}`;
-        req.url = `http://127.0.0.1:3000${req.url}`;
+        // req.url = `http://127.0.0.1:3000${req.url}`;
+        req.url = `${req.url}`;
         // 在发送请求之前加token
         req.headers.Time = String(new Date().getTime());
         req.headers.Authorization = localStorage.getItem("token");
