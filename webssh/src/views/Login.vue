@@ -3,22 +3,52 @@
     <div class="login-box">
       <div class="login-header">
         <h1>欢迎登录</h1>
-        <p>Web Terminal Management System</p>
       </div>
 
       <div class="login-form">
         <div class="form-item">
-          <el-input v-model="data.name" placeholder="请输入用户名" :prefix-icon="User" trim minlength="1" maxlength="64"
-            show-word-limit clearable />
+          <el-input
+            v-model="data.name"
+            placeholder="请输入用户名"
+            :prefix-icon="User"
+            clearable
+          />
         </div>
 
         <div class="form-item">
-          <el-input v-model="data.pwd" placeholder="请输入密码" :prefix-icon="Lock" type="password" trim minlength="3"
-            maxlength="64" show-word-limit show-password clearable />
+          <el-input
+            v-model="data.pwd"
+            placeholder="请输入密码"
+            :prefix-icon="Lock"
+            type="password"
+            show-password
+            clearable
+          />
+        </div>
+
+        <div class="form-item remember-row">
+          <el-checkbox
+            v-model="data.remember"
+            @change="onRememberChange"
+          >
+            记住密码
+          </el-checkbox>
+
+          <el-checkbox
+            v-model="data.autoLogin"
+            :disabled="!data.remember"
+          >
+            自动登录
+          </el-checkbox>
         </div>
 
         <div class="form-item">
-          <el-button type="primary" class="login-button" @click="login">
+          <el-button
+            type="primary"
+            class="login-button"
+            :loading="loading"
+            @click="login"
+          >
             登录
           </el-button>
         </div>
@@ -28,20 +58,20 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue";
-import { useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
-import { User, Lock } from '@element-plus/icons-vue';
-import axios from "axios";
 import { useGlobalStore } from "@/stores/store";
+import { Lock, User } from "@element-plus/icons-vue";
+import axios from "axios";
+import { ElMessage } from "element-plus";
+import { onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
 
-let router = useRouter();
-let globalStore = useGlobalStore();
+/* ================= 基础 ================= */
 
-let data = reactive({
-  name: "",
-  pwd: "",
-})
+const router = useRouter();
+const globalStore = useGlobalStore();
+const loading = ref(false);
+
+/* ================= 接口类型 ================= */
 
 interface ResponseData {
   code: number;
@@ -54,37 +84,176 @@ interface ResponseData {
   user_expiry_at: string;
 }
 
-/**
- * 登陆系统
- */
+/* ================= 表单数据 ================= */
+
+const data = reactive({
+  name: "",
+  pwd: "",
+  remember: false,
+  autoLogin: false,
+});
+
+/* ================= Base64 工具 ================= */
+
+function encodePwd(pwd: string) {
+  return btoa(encodeURIComponent(pwd));
+}
+
+function decodePwd(pwd: string) {
+  return decodeURIComponent(atob(pwd));
+}
+
+/* ================= localStorage ================= */
+
+const STORAGE_KEY = "login_account";
+
+interface LoginAccount {
+  remember: boolean;
+  autoLogin: boolean;
+  name: string;
+  pwd: string;
+}
+
+function saveAccount() {
+  const account: LoginAccount = {
+    remember: data.remember,
+    autoLogin: data.autoLogin,
+    name: data.name,
+    pwd: encodePwd(data.pwd),
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(account));
+}
+
+function loadAccount(): LoginAccount | null {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function clearAccount() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+/* ================= remember 联动 autoLogin ================= */
+
+function onRememberChange(val: boolean) {
+  if (!val) {
+    data.autoLogin = false;
+  }
+}
+
+/* ================= 页面加载：回填 + 自动登录 ================= */
+
+onMounted(() => {
+  const account = loadAccount();
+  // const hasToken = !!localStorage.getItem("token");
+
+  if (!account) return;
+
+  if (account.remember) {
+    data.name = account.name;
+    data.pwd = decodePwd(account.pwd);
+    data.remember = true;
+    data.autoLogin = account.autoLogin;
+  } else {
+    data.name = account.name;
+  }
+
+  // ⚠️ 只有勾选了自动登录才会自动登录
+  if (account.remember && account.autoLogin) {
+    // autoLogin();
+    loading.value = true;
+    setTimeout(() => {
+      autoLogin();
+    }, 1000);
+  }
+});
+
+/* ================= 自动登录 ================= */
+
+function autoLogin() {
+  loading.value = true;
+
+  axios
+    .post<ResponseData>("/api/login", {
+      name: data.name,
+      pwd: data.pwd,
+    })
+    .then((ret) => {
+      if (ret.data.code === 0) {
+        handleLoginSuccess(ret.data);
+      } else {
+        clearAccount();
+      }
+    })
+    .catch(() => {
+      clearAccount();
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+}
+
+/* ================= 手动登录 ================= */
+
 function login() {
   if (data.name.trim().length < 2) {
-    ElMessage.error("用户名至少两个字符")
-    return
+    ElMessage.error("用户名至少两个字符");
+    return;
   }
 
   if (data.pwd.trim().length < 2) {
-    ElMessage.error("密码至少两个字符")
-    return
+    ElMessage.error("密码至少两个字符");
+    return;
   }
 
-  axios.post<ResponseData>("/api/login", data).then((ret) => {
-    if (ret.data.code === 0) {
-      ElMessage.success("登陆成功");
-      localStorage.setItem("token", ret.data.token);
-      localStorage.setItem("auth", "yes");
-      let res = ret.data;
-      globalStore.login(res.is_admin, res.is_root, res.user_name, res.user_desc, res.user_expiry_at);
-      router.push({ name: "Home" });
-    } else {
-      ElMessage.error("登陆失败");
-    }
-  }).catch(() => {
-    ElMessage.error("登陆失败");
-  })
+  loading.value = true;
+
+  axios
+    .post<ResponseData>("/api/login", {
+      name: data.name,
+      pwd: data.pwd,
+    })
+    .then((ret) => {
+      if (ret.data.code === 0) {
+        handleLoginSuccess(ret.data);
+      } else {
+        ElMessage.error("登录失败");
+      }
+    })
+    .catch(() => {
+      ElMessage.error("登录失败");
+    })
+    .finally(() => {
+      loading.value = false;
+    });
 }
 
+/* ================= 登录成功统一处理 ================= */
+
+function handleLoginSuccess(res: ResponseData) {
+  ElMessage.success("登录成功");
+
+  localStorage.setItem("token", res.token);
+  localStorage.setItem("auth", "yes");
+
+  if (data.remember) {
+    saveAccount();
+  } else {
+    clearAccount();
+  }
+
+  globalStore.login(
+    res.is_admin,
+    res.is_root,
+    res.user_name,
+    res.user_desc,
+    res.user_expiry_at
+  );
+
+  router.replace({ name: "Home" });
+}
 </script>
+
 
 <style scoped>
 .login-container {
